@@ -197,7 +197,7 @@ describe('Template files', () => {
   it('SKILL.md has YAML frontmatter with name and description', () => {
     const skillPath = path.join(templatesDir, 'SKILL.md');
     const content = fs.readFileSync(skillPath, 'utf-8');
-    expect(content).toMatch(/^---\nname:/m);
+    expect(content).toMatch(/^---\r?\nname:/m);
     expect(content).toMatch(/description:/);
   });
 
