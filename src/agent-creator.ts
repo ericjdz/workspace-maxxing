@@ -21,15 +21,15 @@ function getNumberedFolders(workspacePath: string): string[] {
 }
 
 export function generateAgentName(purpose: string): string {
-  // Convert "Daily Digest" -> "@daily-digest"
-  // Convert "AI News Aggregator" -> "@ai-news-aggregator"
+  // Convert "Daily Digest" -> "daily-digest"
+  // Convert "AI News Aggregator" -> "ai-news-aggregator"
   const cleaned = purpose
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .trim();
-  return `@${cleaned}`;
+  return cleaned;
 }
 
 export function createAgent(options: AgentOptions): void {
