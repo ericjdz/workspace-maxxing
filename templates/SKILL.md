@@ -10,8 +10,8 @@ description: "Autonomously creates, validates, and improves ICM-compliant worksp
 This is an **AI agent skill** that creates ICM-compliant workspaces with invokable agents.
 
 **User Flow:**
-1. Install: `npx workspace-maxxing install`
-2. Invoke: `@workspace-maxxing` in your AI agent
+1. Install: `npx workspace-maxxing init`
+2. Invoke: `/workspace-maxxing` in your agent harness or CLI
 3. Request: "Create a daily digest workspace" (or similar)
 4. The skill builds: ICM workspace + invokable agent
 
@@ -116,12 +116,12 @@ Create `.agents/skills/<agent-name>/` with these files:
 #### 1. SKILL.md:
 ```markdown
 ---
-name: @<agent-name>
+name: <agent-name>
 description: "Execute <workflow> workflow. Use when user wants <purpose>."
-triggers: ["@<agent-name>", "<workflow>", "run <name> workflow"]
+triggers: ["/<agent-name>", "<workflow>", "run <name> workflow"]
 ---
 
-# @<agent-name> Agent
+# <agent-name> Skill
 
 ## Purpose
 <What this agent does>
@@ -155,7 +155,7 @@ This agent's workspace is at: <workspace-path>
 #### 2. config.json:
 ```json
 {
-  "name": "@<agent-name>",
+  "name": "<agent-name>",
   "purpose": "<purpose>",
   "platforms": ["opencode", "claude", "copilot", "gemini"]
 }
@@ -163,7 +163,7 @@ This agent's workspace is at: <workspace-path>
 
 #### 3. prompts/system.md:
 ```markdown
-# @<agent-name> System Prompt
+# <agent-name> System Prompt
 
 You are a <purpose> assistant. Guide users through:
 1. 01-<stage> — <what to do>
@@ -184,6 +184,11 @@ Read files from: <workspace-path>
 ```
 
 **Critical**: Create `.agents/skills/<name>/` with these files BEFORE delivering!
+
+After delivering the workspace and agent, suggest skill registration:
+
+> Register these skills globally? Run:
+> `npx workspace-maxxing register-skills <workspace-path>/.agents/skills --global`
 
 ---
 

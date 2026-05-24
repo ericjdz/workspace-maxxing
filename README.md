@@ -99,10 +99,10 @@ npx workspace-maxxing --copilot
 npx workspace-maxxing --gemini
 ```
 
-Then invoke in your AI session:
+Then invoke the skill in your agent harness or CLI:
 
 ```text
-@workspace-maxxing
+/workspace-maxxing
 Create a daily digest workflow for AI news.
 ```
 
@@ -133,7 +133,7 @@ npx workspace-maxxing init \
 
 ## Use Cases
 
-After install, talk to `@workspace-maxxing` in plain language:
+After install, use `/workspace-maxxing` in your agent harness or CLI:
 
 - "Build a workspace for weekly product analytics reports"
 - "Create an agent for PR review triage"
@@ -157,7 +157,7 @@ The skill internally routes through specialized sub-skills such as:
 Use this first-run flow when setting up workspace-maxxing in a new repo:
 
 1. Install the skill for your environment (`install`, `--claude`, `--copilot`, or `--gemini`).
-2. Start your AI session and invoke `@workspace-maxxing`.
+2. Start your AI session and invoke `/workspace-maxxing`.
 3. Describe the workflow goal in one sentence.
 4. Review generated files (`SYSTEM.md`, `CONTEXT.md`, stage folders, and `00-meta/`).
 5. Run validation or iteration to improve robustness before regular use.
@@ -179,6 +179,28 @@ npx workspace-maxxing --gemini
 
 # Create workspace (+ agent by default)
 npx workspace-maxxing init
+```
+
+### Skill Registry
+
+```bash
+# Register all skills from a workspace into the global registry
+npx workspace-maxxing register-skills ./my-workspace/.agents/skills --global
+
+# Register for specific platforms
+npx workspace-maxxing register-skills ./path/to/skills --opencode --claude
+
+# List all registered skills
+npx workspace-maxxing list-skills
+
+# Unregister a skill
+npx workspace-maxxing unregister-skills my-skill
+
+# Unregister all
+npx workspace-maxxing unregister-skills --all
+
+# Re-sync all registered skills from source
+npx workspace-maxxing register-skills --sync
 ```
 
 ## Local Development
