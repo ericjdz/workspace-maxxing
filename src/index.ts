@@ -7,6 +7,8 @@ import { scaffoldWorkspace } from './scripts/scaffold';
 import { createAgent, generateAgentName, AgentOptions } from './agent-creator';
 import { iterateAgent } from './agent-iterator';
 import { detectPlatform, getPlatformInstaller } from './platforms';
+import { scanForSkills, addSkill, removeSkill, listSkills } from './registry';
+import { detectAvailablePlatforms, wireSkill, unwireSkill, WirePlatform } from './registry-wiring';
 
 /**
  * Copy sub-skills directory to workspace's .agents/skills/ folder.
@@ -41,6 +43,17 @@ Installation Options:
   --copilot         Install skill for GitHub Copilot agents
   --gemini          Install skill for Gemini CLI agents
 
+Skill Registry:
+  register-skills <path>   Register skills from a directory into the global registry
+  list-skills              List all registered skills
+  unregister-skills <name> Unregister a skill by name
+
+Registry Options:
+  --global                 Wire into all detected agent platforms
+  --name <name>            Override skill name (single skill only)
+  --sync                   Re-sync all registered skills from source
+  --all                    Unregister all skills
+
 Examples:
   # Install skill (recommended)
   npx workspace-maxxing init
@@ -50,8 +63,8 @@ Examples:
   npx workspace-maxxing --copilot
   npx workspace-maxxing --gemini
 
-After install, invoke in your AI:
-  @workspace-maxxing
+After install, use the skill in your agent harness or CLI:
+  /workspace-maxxing
   Create a workflow for [your task]
 `);
 }
@@ -145,11 +158,129 @@ async function createWorkspace(args: string[], templatesDir: string): Promise<vo
     console.log(`Score: ${iterationResult.score}/${threshold}`);
     console.log(`Iterations: ${iterationResult.iterations}`);
     const displayName = agentName.startsWith('@') ? agentName.slice(1) : agentName;
-    console.log(`\nTo invoke the agent, use: @${displayName}`);
+    console.log(`\nTo use this workflow, invoke: /${displayName} in your agent harness or CLI.`);
   } else {
     console.log('\n=== Workspace Creation Complete ===');
     console.log(`Workspace: ${outputDir}`);
     console.log('(Agent creation disabled with --no-agent)');
+  }
+}
+
+async function handleRegister(skillPath: string, platforms: WirePlatform[], nameOverride?: string): Promise<void> {
+  const resolvedPath = path.resolve(process.cwd(), skillPath);
+  const skills = scanForSkills(resolvedPath);
+
+  if (skills.length === 0) {
+    console.error(`No skills found in ${resolvedPath}`);
+    process.exit(1);
+  }
+
+  if (nameOverride && skills.length > 1) {
+    console.error('Cannot use --name when registering multiple skills.');
+    process.exit(1);
+  }
+
+  for (const skill of skills) {
+    const skillName = nameOverride ?? skill.name;
+
+    try {
+      addSkill({
+        name: skillName,
+        path: skill.path,
+        source: skill.path,
+        platforms,
+      });
+      console.log(`Registered: ${skillName}`);
+
+      for (const platform of platforms) {
+        const result = wireSkill(skillName, skill.path, platform);
+        if (result.success) {
+          console.log(`  Wired to ${platform}: ${result.targetPath}`);
+        } else {
+          console.error(`  Failed to wire ${skillName} to ${platform}: ${result.error}`);
+        }
+      }
+    } catch (error) {
+      console.error(`Failed to register ${skillName}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+}
+
+function handleListSkills(): void {
+  const skills = listSkills();
+
+  if (skills.length === 0) {
+    console.log('No skills registered. Use register-skills to add skills.');
+    return;
+  }
+
+  for (const skill of skills) {
+    const status = fs.existsSync(skill.source) ? 'OK' : 'WARNING';
+    console.log(`Name: ${skill.name}`);
+    console.log(`  Path: ${skill.path}`);
+    console.log(`  Platforms: ${skill.platforms.join(', ') || '(none)'}`);
+    console.log(`  Registered: ${skill.registeredAt}`);
+    console.log(`  Status: ${status}`);
+  }
+}
+
+function handleUnregister(name: string): void {
+  const removed = removeSkill(name);
+
+  if (!removed) {
+    console.error(`Skill '${name}' is not registered.`);
+    process.exit(1);
+  }
+
+  for (const platform of removed.platforms) {
+    unwireSkill(name, platform as WirePlatform);
+  }
+
+  console.log(`Unregistered: ${name}`);
+  console.log(`Platforms removed from: ${removed.platforms.join(', ') || '(none)'}`);
+}
+
+async function handleUnregisterAll(): Promise<void> {
+  const skills = listSkills();
+
+  if (skills.length === 0) {
+    console.log('No skills registered.');
+    return;
+  }
+
+  for (const skill of skills) {
+    for (const platform of skill.platforms) {
+      unwireSkill(skill.name, platform as WirePlatform);
+    }
+    removeSkill(skill.name);
+    console.log(`Unregistered: ${skill.name}`);
+  }
+
+  console.log(`Total unregistered: ${skills.length}`);
+}
+
+async function handleSync(): Promise<void> {
+  const skills = listSkills();
+
+  if (skills.length === 0) {
+    console.log('No skills registered. Nothing to sync.');
+    return;
+  }
+
+  for (const skill of skills) {
+    if (!fs.existsSync(skill.source)) {
+      console.error(`Missing source for ${skill.name}: ${skill.source}`);
+      continue;
+    }
+
+    for (const platform of skill.platforms) {
+      const result = wireSkill(skill.name, skill.source, platform as WirePlatform);
+      if (result.success) {
+        console.log(`Synced ${skill.name} to ${platform}: ${result.targetPath}`);
+      } else {
+        console.error(`Failed to sync ${skill.name} to ${platform}: ${result.error}`);
+      }
+    }
   }
 }
 
@@ -187,12 +318,53 @@ async function main(): Promise<void> {
 
     if (result.success) {
       console.log(`✓ Skill installed to: ${result.skillPath}`);
-      console.log(`\nOpen a new session and invoke @workspace-maxxing to create your first workflow.`);
+      console.log(`\nOpen a new session and invoke /workspace-maxxing in your agent harness or CLI to create your first workflow.`);
     } else {
       console.error(`Installation failed: ${result.error}`);
       process.exit(1);
     }
 
+    return;
+  }
+
+  // register-skills command
+  if (args.includes('register-skills')) {
+    const regIdx = args.indexOf('register-skills');
+    const pathArg = args[regIdx + 1];
+    if (args.includes('--sync')) {
+      await handleSync();
+      return;
+    }
+    if (!pathArg || pathArg.startsWith('-')) {
+      console.error('Usage: workspace-maxxing register-skills <path> [--global|--opencode|--claude|--copilot|--gemini]');
+      process.exit(1);
+    }
+    const nameOverride = extractOption(args, '--name');
+    const platformFlags: WirePlatform[] = ['opencode', 'claude', 'copilot', 'gemini'];
+    const requestedPlatforms = platformFlags.filter(p => args.includes(`--${p}`));
+    const useGlobal = args.includes('--global') || requestedPlatforms.length === 0;
+    const targetPlatforms = useGlobal ? detectAvailablePlatforms() : requestedPlatforms;
+    await handleRegister(pathArg, targetPlatforms, nameOverride ?? undefined);
+    return;
+  }
+
+  if (args.includes('list-skills')) {
+    handleListSkills();
+    return;
+  }
+
+  if (args.includes('unregister-skills')) {
+    if (args.includes('--all')) {
+      await handleUnregisterAll();
+      return;
+    }
+    const unregIdx = args.indexOf('unregister-skills');
+    const nameArg = args[unregIdx + 1];
+    if (!nameArg || nameArg.startsWith('-')) {
+      console.error('Usage: workspace-maxxing unregister-skills <name> | --all');
+      process.exit(1);
+    }
+    handleUnregister(nameArg);
     return;
   }
 
