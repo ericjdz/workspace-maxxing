@@ -1,6 +1,6 @@
 {
   "name": "workspace-maxxing",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "npx-installable skill for AI agents to create structured workspaces using ICM methodology",
   "bin": {
     "workspace-maxxing": "dist/index.js"
