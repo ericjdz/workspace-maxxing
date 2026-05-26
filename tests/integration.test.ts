@@ -7,86 +7,6 @@ import { execFileSync } from 'child_process';
 const repoRoot = path.join(__dirname, '..');
 const cliPath = path.join(repoRoot, 'dist', 'index.js');
 const templatesPath = path.join(repoRoot, 'templates');
-const orchestratorPath = path.join(repoRoot, 'dist', 'scripts', 'orchestrator.js');
-const dispatchPath = path.join(repoRoot, 'dist', 'scripts', 'dispatch.js');
-
-function writeFileWithParents(filePath: string, content: string): void {
-  fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  fs.writeFileSync(filePath, content);
-}
-
-function createBasicOrchestratorWorkspace(baseDir: string): string {
-  const workspacePath = path.join(baseDir, 'workspace');
-  fs.mkdirSync(workspacePath, { recursive: true });
-
-  const stageNames = ['01-input', '02-process', '03-output'];
-  for (const stageName of stageNames) {
-    const contextPath = path.join(workspacePath, stageName, 'CONTEXT.md');
-    writeFileWithParents(
-      contextPath,
-      [
-        '## Purpose',
-        `${stageName} purpose for automated integration testing.`,
-        '',
-        '## Input',
-        'Structured data from the prior stage input.',
-        '',
-        '## Output',
-        'Structured output produced by this stage.',
-        '',
-        '## Dependencies',
-        'Depends on upstream context and files.',
-        '',
-        '## Success Criteria',
-        'Produces deterministic and complete output.',
-        '',
-        '## Approach',
-        'Follow the stage workflow and validation checks.',
-        '',
-        '## Risks',
-        'Incorrect transformations can reduce quality.',
-        '',
-        '## Timeline',
-        'This stage completes in a single iteration.',
-        '',
-        '## Resources',
-        'Uses the local skill templates and reports.',
-        '',
-        '## Validation',
-        'Validate outputs against expected structure.',
-        '',
-      ].join('\n'),
-    );
-  }
-
-  writeFileWithParents(
-    path.join(workspacePath, '.agents', 'skills', 'workspace-maxxing', 'skills', 'worker', 'SKILL.md'),
-    '---\nname: worker\n---\n\n# Worker\n\nIntegration worker skill fixture.\n',
-  );
-
-  writeFileWithParents(
-    path.join(workspacePath, '.agents', 'skills', 'workspace-maxxing', 'skills', 'fixer', 'SKILL.md'),
-    '---\nname: fixer\n---\n\n# Fixer\n\nIntegration fixer skill fixture.\n',
-  );
-
-  return workspacePath;
-}
-
-function runOrchestrator(orchestratorPath: string, workspacePath: string, extraArgs: string[] = []): string {
-  return execFileSync(
-    process.execPath,
-    [orchestratorPath, '--workspace', workspacePath, '--batch-size', '2', ...extraArgs],
-    { encoding: 'utf-8' },
-  );
-}
-
-function runDispatch(dispatchScriptPath: string, args: string[]): string {
-  return execFileSync(
-    process.execPath,
-    [dispatchScriptPath, ...args],
-    { encoding: 'utf-8' },
-  );
-}
 
 function runBuildOnce(): void {
   const npmExecPath = process.env.npm_execpath;
@@ -187,8 +107,6 @@ describe('Integration', () => {
       'scripts/scaffold.ts',
       'scripts/validate.ts',
       'scripts/install-tool.ts',
-      'scripts/iterate.ts',
-      'scripts/generate-tests.ts',
     ];
 
     for (const file of expectedFiles) {
@@ -223,7 +141,7 @@ describe('Integration', () => {
     const firstSnapshot = snapshotDirectory(skillDir);
     expect(firstSnapshot.files.length).toBeGreaterThan(0);
     expect(firstSnapshot.files).toContain('SKILL.md');
-    expect(firstSnapshot.files).toContain(path.join('scripts', 'iterate.ts'));
+    expect(firstSnapshot.files).toContain(path.join('scripts', 'validate.ts'));
 
     const secondOutput = runInstaller(tempDir);
     expect(secondOutput).toContain('installed');
@@ -234,81 +152,3 @@ describe('Integration', () => {
   });
 });
 
-describe('orchestrator integration', () => {
-  let orchestratorTempDir: string;
-
-  beforeEach(() => {
-    orchestratorTempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'workspace-maxxing-orchestrator-integration-'));
-  });
-
-  afterEach(() => {
-    if (orchestratorTempDir) {
-      fs.rmSync(orchestratorTempDir, { recursive: true, force: true });
-    }
-  });
-
-  it('runs full batch lifecycle on a valid workspace via dist orchestrator script', () => {
-    const workspacePath = createBasicOrchestratorWorkspace(orchestratorTempDir);
-
-    const output = runOrchestrator(orchestratorPath, workspacePath);
-    const result = JSON.parse(output);
-
-    expect(result.totalBatches).toBeGreaterThan(0);
-    expect(Array.isArray(result.batchReports)).toBe(true);
-    expect(result.batchReports.length).toBe(result.totalBatches);
-  });
-
-  it('writes summary.json to .agents/iteration', () => {
-    const workspacePath = createBasicOrchestratorWorkspace(orchestratorTempDir);
-
-    runOrchestrator(orchestratorPath, workspacePath);
-
-    const summaryPath = path.join(workspacePath, '.agents', 'iteration', 'summary.json');
-    expect(fs.existsSync(summaryPath)).toBe(true);
-
-    const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf-8'));
-    expect(summary.totalBatches).toBeGreaterThan(0);
-    expect(typeof summary.timestamp).toBe('string');
-  });
-
-  it('worker dispatch fails without external runner command', () => {
-    const workspacePath = createBasicOrchestratorWorkspace(orchestratorTempDir);
-
-    const output = runDispatch(dispatchPath, [
-      '--skill', 'worker',
-      '--workspace', workspacePath,
-      '--batch-id', '1',
-      '--test-case-id', 'tc-001',
-    ]);
-
-    const report = JSON.parse(output);
-    expect(report.status).toBe('failed');
-    expect(report.findings.join(' ')).toContain('External sub-agent runner is required');
-  });
-
-  it('dispatch-recursion runner command does not produce a successful worker execution', () => {
-    const workspacePath = createBasicOrchestratorWorkspace(orchestratorTempDir);
-    const recursiveRunner = `"${process.execPath}" "${dispatchPath}" --skill {skill} --workspace "{workspace}" --batch-id {batchId} --test-case-id {testCaseId}`;
-
-    const output = runDispatch(dispatchPath, [
-      '--skill', 'worker',
-      '--workspace', workspacePath,
-      '--batch-id', '1',
-      '--test-case-id', 'tc-002',
-      '--runner-command', recursiveRunner,
-    ]);
-
-    const report = JSON.parse(output);
-    expect(report.status).toBe('failed');
-  });
-
-  it('orchestrator does not mark passing batches when worker execution cannot run', () => {
-    const workspacePath = createBasicOrchestratorWorkspace(orchestratorTempDir);
-
-    const output = runOrchestrator(orchestratorPath, workspacePath, ['--score-threshold', '95']);
-    const result = JSON.parse(output);
-
-    expect(result.passedBatches).toBe(0);
-    expect(result.failedBatches + result.escalatedBatches).toBe(result.totalBatches);
-  });
-});

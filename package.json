@@ -1,11 +1,17 @@
 {
   "name": "workspace-maxxing",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Scaffolding CLI + AI agent skill for creating structured, deterministic workflow workspaces using ICM methodology",
   "bin": {
     "workspace-maxxing": "dist/index.js"
   },
   "main": "dist/index.js",
+  "files": [
+    "dist/",
+    "templates/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "jest --config jest.config.js",

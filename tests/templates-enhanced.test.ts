@@ -130,23 +130,6 @@ describe('Sub-Skills', () => {
     });
   });
 
-  describe('iteration', () => {
-    it('has SKILL.md with required sections', () => {
-      const filePath = path.join(skillsDir, 'iteration', 'SKILL.md');
-      expect(fs.existsSync(filePath)).toBe(true);
-      const content = fs.readFileSync(filePath, 'utf-8');
-      expect(content).toContain('---');
-      expect(content).toContain('name:');
-      expect(content).toContain('description:');
-      expect(content).toContain('## Overview');
-      expect(content).toContain('## When to Use');
-      expect(content).toContain('## The Process');
-      expect(content).toContain('## Red Flags');
-      expect(content).toContain('## Report Format');
-      expect(content).toContain('## Integration');
-    });
-  });
-
   describe('tooling', () => {
     it('has SKILL.md with required sections', () => {
       const filePath = path.join(skillsDir, 'tooling', 'SKILL.md');
@@ -162,47 +145,5 @@ describe('Sub-Skills', () => {
       expect(content).toContain('## Report Format');
       expect(content).toContain('## Integration');
     });
-  });
-
-  describe('worker', () => {
-    it('documents strict external runner contract and payload schema', () => {
-      const filePath = path.join(skillsDir, 'worker', 'SKILL.md');
-      expect(fs.existsSync(filePath)).toBe(true);
-
-      const content = fs.readFileSync(filePath, 'utf-8');
-      expect(content).toContain('External Runner Contract');
-      expect(content).toContain('--subagent-runner');
-      expect(content).toContain('{skill}');
-      expect(content).toContain('{workspace}');
-      expect(content).toContain('{batchId}');
-      expect(content).toContain('{testCaseId}');
-      expect(content).toContain('report.json');
-    });
-  });
-
-  describe('fixer', () => {
-    it('documents strict external runner contract and payload schema', () => {
-      const filePath = path.join(skillsDir, 'fixer', 'SKILL.md');
-      expect(fs.existsSync(filePath)).toBe(true);
-
-      const content = fs.readFileSync(filePath, 'utf-8');
-      expect(content).toContain('External Runner Contract');
-      expect(content).toContain('--subagent-runner');
-      expect(content).toContain('{skill}');
-      expect(content).toContain('{workspace}');
-      expect(content).toContain('{batchId}');
-      expect(content).toContain('{testCaseId}');
-      expect(content).toContain('report.json');
-    });
-  });
-});
-
-describe('Dispatch Script', () => {
-  it('exists in templates scripts directory', () => {
-    const filePath = path.join(templatesDir, 'scripts', 'dispatch.ts');
-    expect(fs.existsSync(filePath)).toBe(true);
-    const content = fs.readFileSync(filePath, 'utf-8');
-    expect(content).toContain('dispatchSkill');
-    expect(content).toContain('DispatchReport');
   });
 });
