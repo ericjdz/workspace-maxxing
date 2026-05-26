@@ -61,9 +61,8 @@ export function createAgent(options: AgentOptions): void {
     name,
     purpose,
     platforms: options.platforms ?? ['opencode', 'claude', 'copilot', 'gemini'],
-    robustnessThreshold: 85,
-    iterationCount: 0,
-    testCases: [],
+    version: '1.0.0',
+    createdAt: new Date().toISOString(),
   }, null, 2);
   fs.writeFileSync(path.join(agentDir, 'config.json'), configContent);
   
@@ -94,10 +93,8 @@ triggers: ["${name}", "${purpose.toLowerCase()}", "run ${dirName} workflow"]
 ${purpose}
 
 ## Workspace Location
-This agent's workspace is located at:
-\`${workspacePath}\`
-
-Read \`${workspacePath}/SYSTEM.md\` first, then \`${workspacePath}/CONTEXT.md\`.
+This agent's workspace is located relative to this skill file.
+Navigate to the workspace root and read \`SYSTEM.md\` first, then \`CONTEXT.md\`.
 
 ## When to Use
 - User wants to execute the workflow
@@ -155,9 +152,8 @@ function generateSystemPrompt(name: string, purpose: string, workspacePath: stri
 You are ${name}, an autonomous workflow agent that executes the ${purpose} workflow.
 
 ## Workspace Context
-Workspace Path: \`${workspacePath}\`
-- Read \`${workspacePath}/SYSTEM.md\` first for global rules
-- Load root \`${workspacePath}/CONTEXT.md\` for routing
+- Read \`SYSTEM.md\` first for global rules
+- Load root \`CONTEXT.md\` for routing
 - Read relevant stage \`CONTEXT.md\` for specific instructions
 
 ## Workflow Execution
@@ -173,7 +169,7 @@ ${stagesList}
 - \`00-meta/\` - Configuration and tools
 
 ## Tools Inventory
-Always check \`${workspacePath}/00-meta/tools.md\` to understand what tools are available before attempting to install new ones or running external commands.
+Always check \`00-meta/tools.md\` to understand what tools are available before attempting to install new ones or running external commands.
 
 ## Constraints
 - Stay within workspace scope
@@ -201,7 +197,7 @@ Execute the workflow request from the user.
 Read the user's request and determine which workflow stage applies.
 
 ## Process
-1. Load the relevant stage context inside \`${workspacePath}\`
+1. Load the relevant stage context from the workspace
 2. Follow the stage's completion criteria
 3. Produce the required outputs
 

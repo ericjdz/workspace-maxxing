@@ -1,6 +1,6 @@
 ---
 name: workspace-maxxing
-description: "Autonomously creates, validates, and improves ICM-compliant workspaces with invokable agents. Use when user asks to 'build a workspace', 'create a workflow', 'automate a process', 'improve this workspace', 'validate this workspace', or 'create an agent'."
+description: "Creates structured, deterministic AI workflow workspaces using ICM methodology. Use when user asks to 'build a workspace', 'create a workflow', 'automate a process', 'validate this workspace', or 'create an agent'."
 ---
 
 # Workspace-Maxxing Skill
@@ -18,7 +18,7 @@ This is an **AI agent skill** that creates ICM-compliant workspaces with invokab
 ## When to Use
 
 - User asks to build, create, or automate a workflow
-- User asks to improve, validate, or iterate on an existing workspace
+- User asks to validate an existing workspace
 - User asks for workspace architecture or structure design
 - User asks to assess or install tools for a workspace
 - **User asks to create an agent for a specific task**
@@ -30,7 +30,6 @@ This is an **AI agent skill** that creates ICM-compliant workspaces with invokab
 | "Build a workspace for X" | Creates ICM workspace with X workflow |
 | "Create an agent for Y" | Creates invokable @agent for Y task |
 | "Validate my workspace" | Checks ICM compliance |
-| "Improve my workspace" | Runs autonomous iteration |
 | "Add tools for Z" | Discovers and installs tools for Z |
 
 ## Tool Discovery (MANDATORY Before Agent Delivery)
@@ -199,7 +198,7 @@ After delivering the workspace and agent, append this message to your final outp
 ```markdown
 ---
 
-## ⚠️ Restart Your AI Session
+## Restart Your AI Session
 
 To use the new `@<agent-name>` skill:
 
@@ -223,7 +222,6 @@ The new skill won't be available until you restart. This is how AI agent environ
 NO BUILD WITHOUT PLAN
 NO PLAN WITHOUT RESEARCH
 NO AGENT DELIVERY WITHOUT TOOL DISCOVERY
-NO IMPROVEMENT WITHOUT VALIDATION
 NO COMPLETION CLAIM WITHOUT VERIFICATION
 NO PRODUCT IMPLEMENTATION INSIDE WORKSPACE BUILDING MODE
 NO STAGE SKIPPING ACROSS NUMBERED WORKFLOW FOLDERS
@@ -247,14 +245,6 @@ NO STAGE SKIPPING ACROSS NUMBERED WORKFLOW FOLDERS
 - Questions about ICM methodology (answer directly)
 - Non-workspace tasks (check for other applicable skills first)
 
-## References
-
-Read these files for additional guidance when needed:
-
-- `<workspace-path>/references/iron-laws.md` — Absolute rules for workspace building
-- `<workspace-path>/references/anti-patterns.md` — Common rationalizations and reality checks
-- `<workspace-path>/references/reporting-format.md` — Structured JSON report format for sub-skill outputs
-
 ## Anti-Rationalization Table
 
 | Thought | Reality |
@@ -264,8 +254,6 @@ Read these files for additional guidance when needed:
 | "The user didn't ask for tests" | Autonomous workflows require self-verification. Tests are mandatory. |
 | "I'll fix this later" | Later never comes. Fix it now or escalate. |
 | "I'll do all phases at once" | Phases exist for a reason. Complete each before moving to the next. |
-| "The score is fine" | Fine is not good. Target >= 85. |
-| "I already validated this" | Validation is a snapshot. Re-validate after every change. |
 
 ## ICM Rules
 
@@ -294,5 +282,3 @@ npx workspace-maxxing --claude
 npx workspace-maxxing --copilot
 npx workspace-maxxing --gemini
 ```
-
-See `references/scripts-reference.md` for detailed script documentation.

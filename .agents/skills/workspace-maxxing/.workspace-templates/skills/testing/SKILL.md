@@ -13,22 +13,12 @@ Verify workspace quality through systematic testing. Testing confirms outputs ac
 - After prompt-engineering improvements
 - When no tests exist for the workspace
 - Before claiming delivery
-- When benchmark score is strictly between 80 and 85 (`80 < score < 85`)
-- When score is 85 or higher and final evidence is still required
 
 ## When Not to Use
 
 - Before workspace build is complete (run scaffold.ts first)
 - For structural validation (use validation sub-skill)
-- When applying direct fixes to failures (use fixer sub-skill)
-- When benchmark score is 80 or lower (`score <= 80`) (use prompt-engineering first)
-
-## The Iron Law
-
-NO SKIPPING TEST GENERATION
-NO IGNORING FAILED TESTS
-NO CLAIMING QUALITY WITHOUT EVIDENCE
-NO TESTING WITHOUT TEST CASES
+- When applying direct fixes to failures
 
 ## The Process
 
@@ -46,44 +36,13 @@ NO TESTING WITHOUT TEST CASES
 - Failed test cases are ignored
 - Failure patterns are undocumented
 
-## Anti-Rationalization Table
-
-| Thought | Reality |
-|---------|---------|
-| "The workspace looks fine, no need to test" | Looks can deceive. Tests reveal behavior. |
-| "One failed test is a fluke" | Failed tests are signals. Investigate each one. |
-| "I will test after delivery" | Untested delivery is a gamble. Test first. |
-
-## Sub-Skill Dispatch
-
-- `status = passed` (all required tests pass and `benchmarkScore >= 85`) -> `nextSkill = none`.
-- `status = failed` (any required test fails or `benchmarkScore < 85`) -> `nextSkill = iteration`.
-- `status = escalated` (testing cannot run reliably due to blockers) -> `nextSkill = none`.
-
 ## Report Format
 
-```json
-{
-  "skill": "testing",
-  "status": "failed",
-  "timestamp": "2026-04-08T00:00:00Z",
-  "findings": ["Two edge-case outputs failed acceptance checks"],
-  "recommendations": ["Run iteration to address repeated edge-case defects"],
-  "metrics": {
-    "benchmarkScore": 82,
-    "testCasesGenerated": 9,
-    "testCasesPassed": 7,
-    "testCasesFailed": 2
-  },
-  "nextSkill": "iteration"
-}
-```
-
-Allowed `status` values: `passed`, `failed`, `escalated`.
-
-Allowed `nextSkill` values: `iteration`, `none`.
+- Status: pass, fail, or escalated
+- Findings: list what passed, what failed, and any gaps
+- Recommendations: suggest next actions without routing
 
 ## Integration
 
 - Uses generate-tests.ts output as primary test input.
-- Supplies pass/fail evidence for iteration and final verification.
+- Supplies pass/fail evidence for follow-up work.

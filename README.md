@@ -4,11 +4,11 @@
   <a href="https://www.npmjs.com/package/workspace-maxxing">
     <img src="https://img.shields.io/npm/v/workspace-maxxing?style=flat&color=blue" alt="npm version">
   </a>
-  <a href="https://github.com/ericjdz/workflow-maxxing/blob/master/LICENSE">
+  <a href="https://github.com/ericjdz/workspace-maxxing/blob/master/LICENSE">
     <img src="https://img.shields.io/npm/l/workspace-maxxing?style=flat&color=green" alt="MIT License">
   </a>
-  <a href="https://github.com/ericjdz/workflow-maxxing">
-    <img src="https://img.shields.io/github/stars/ericjdz/workflow-maxxing?style=flat" alt="GitHub stars">
+  <a href="https://github.com/ericjdz/workspace-maxxing">
+    <img src="https://img.shields.io/github/stars/ericjdz/workspace-maxxing?style=flat" alt="GitHub stars">
   </a>
 </p>
 
@@ -22,14 +22,14 @@ If you've ever struggled to get an AI to follow a consistent process, or if your
 
 ---
 
-Build structured, interpretable AI workflow workspaces and invokable agents from one command.
+A scaffolding CLI + AI agent skill that creates structured, deterministic AI workflow workspaces using ICM methodology.
 
 workspace-maxxing is an npx-installable CLI + skill package that helps you:
 
 - Scaffold ICM-style workspace folders
 - Install the `workspace-maxxing` skill into your agent environment
 - Generate an invokable agent for your workflow
-- Validate and iterate toward robust outputs
+- Validate workspace structure for methodology compliance
 
 ## What Is workspace-maxxing?
 
@@ -43,19 +43,32 @@ Instead of throwing everything into one giant prompt, it creates a staged workfl
 - `00-meta/` for execution log and tool inventory
 - Generated agent prompts and configuration
 
+## How It Works
+
+The CLI scaffolds the initial files and environment, then the installed skill guides the AI agent through the following phases inline:
+
+1. **Research**: Identifies the requirements, tools, and constraints.
+2. **Architecture**: Designs the folder hierarchy and context contracts.
+3. **Tooling**: Assesses and configures the necessary tools.
+4. **Build**: Executes the implementation of the workflow.
+5. **Validation**: Checks for structural compliance and logical consistency.
+6. **Delivery**: Produces the final working workspace.
+
+The LLM and its agent harness are the runtime. workspace-maxxing provides the structure and guidance.
+
 ## Why Use It?
 
 Use workspace-maxxing when you want workflows that are easier to debug, review, and repeat.
 
-1. Better control over agent behavior: numbered stages and explicit context files reduce prompt drift.
-2. Easier review and handoff: outputs live in plain files, so humans can inspect and edit between stages.
-3. Repeatable execution: the same structure can run new input with less re-prompting.
-4. Cross-platform agent install: supports OpenCode, Claude Code, GitHub Copilot, and Gemini CLI targets.
-5. Built-in quality loop: includes validation, test generation, benchmark scoring, and fix retries.
+1. **Deterministic workflows**: instead of an AI agent making its own path decisions, workspace-maxxing gives it guardrails—numbered stages, context contracts, tool inventories, and routing tables that tell the agent exactly where to go.
+2. **Better control**: explicit context files and stage boundaries reduce prompt drift.
+3. **Easier review**: outputs live in plain files, allowing humans to inspect and edit between stages.
+4. **Repeatable execution**: the same structure can run new input with minimal re-prompting.
+5. **Cross-platform**: supports OpenCode, Claude Code, GitHub Copilot, and Gemini CLI targets.
 
 ## Methodology Basis (ICM)
 
-This project is based in part on Interpratable Context Methodology (ICM) including folder-structure conventions such as numbered stage folders, stage contracts, selective context loading, and file-based handoffs.
+This project is based on Interpretable Context Methodology (ICM) including folder-structure conventions such as numbered stage folders, stage contracts, selective context loading, and file-based handoffs.
 
 Attribution:
 
@@ -119,8 +132,6 @@ Common options:
 - `--output <path>`
 - `--agent-name <name>`
 - `--no-agent`
-- `--threshold <score>` (default: 85)
-- `--max-iterations <n>` (default: 3)
 
 Example:
 
@@ -138,29 +149,10 @@ After install, use `/workspace-maxxing` in your agent harness or CLI:
 - "Build a workspace for weekly product analytics reports"
 - "Create an agent for PR review triage"
 - "Validate this workspace"
-- "Improve this workspace until robust"
 - "Create a content pipeline for newsletters"
 - "Set up a customer-support triage workflow"
 
-The skill internally routes through specialized sub-skills such as:
-
-- `research`
-- `architecture`
-- `tooling`
-- `validation`
-- `worker`
-- `fixer`
-- `iteration`
-
-## Onboarding
-
-Use this first-run flow when setting up workspace-maxxing in a new repo:
-
-1. Install the skill for your environment (`install`, `--claude`, `--copilot`, or `--gemini`).
-2. Start your AI session and invoke `/workspace-maxxing`.
-3. Describe the workflow goal in one sentence.
-4. Review generated files (`SYSTEM.md`, `CONTEXT.md`, stage folders, and `00-meta/`).
-5. Run validation or iteration to improve robustness before regular use.
+The skill guides the AI through specialized phases such as research, architecture, tooling, and validation to ensure the resulting workspace is robust and follows the methodology.
 
 ## CLI Commands
 

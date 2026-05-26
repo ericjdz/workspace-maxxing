@@ -5,7 +5,6 @@ import * as path from 'path';
 import { detectProjectRoot, installSkill, AgentTarget, copyDirSync } from './install';
 import { scaffoldWorkspace } from './scripts/scaffold';
 import { createAgent, generateAgentName, AgentOptions } from './agent-creator';
-import { iterateAgent } from './agent-iterator';
 import { detectPlatform, getPlatformInstaller } from './platforms';
 import { scanForSkills, addSkill, removeSkill, listSkills } from './registry';
 import { detectAvailablePlatforms, wireSkill, unwireSkill, WirePlatform } from './registry-wiring';
@@ -82,7 +81,7 @@ async function createWorkspace(args: string[], templatesDir: string): Promise<vo
   const workspaceName = extractOption(args, '--workspace-name') ?? 'My Workspace';
   const stagesStr = extractOption(args, '--stages') ?? '';
   if (!stagesStr) {
-    console.log('No stages specified — using default stages. Use --stages to customize.');
+    console.warn('⚠ Warning: No --stages specified. Using generic defaults (01-input, 02-process, 03-output).\n  For better results, specify stages matching your workflow: --stages "01-research,02-analysis,03-report"');
   }
   const stages = stagesStr
     ? stagesStr.split(',').map(s => s.trim()).filter(Boolean)
@@ -93,8 +92,6 @@ async function createWorkspace(args: string[], templatesDir: string): Promise<vo
   const outputDir = extractOption(args, '--output') 
     ? path.resolve(process.cwd(), extractOption(args, '--output')!)
     : path.resolve(process.cwd(), 'workspace');
-  const threshold = extractOption(args, '--threshold') ? parseInt(extractOption(args, '--threshold')!, 10) : 85;
-  const maxIterations = extractOption(args, '--max-iterations') ? parseInt(extractOption(args, '--max-iterations')!, 10) : 3;
 
   console.log('=== Workspace-Maxxing ===');
   console.log(`Creating workspace: ${workspaceName}`);
@@ -132,20 +129,10 @@ async function createWorkspace(args: string[], templatesDir: string): Promise<vo
     
     createAgent(agentOptions);
     
-    // Step 4: Run agent self-improvement loop
-    console.log('\nStep 4: Running agent self-improvement...');
+    // Step 4: Install for detected platform
+    console.log('\nStep 4: Installing for platform...');
     const agentDirName = agentName.startsWith('@') ? agentName.slice(1) : agentName;
     const agentPath = path.join(outputDir, '.agents', 'skills', agentDirName);
-    
-    const iterationResult = await iterateAgent({
-      agentPath,
-      workspacePath: outputDir,
-      threshold,
-      maxIterations,
-    });
-    
-    // Step 5: Install for detected platform
-    console.log('\nStep 5: Installing for platform...');
     const platform = detectPlatform();
     console.log(`Detected platform: ${platform}`);
     
@@ -155,8 +142,6 @@ async function createWorkspace(args: string[], templatesDir: string): Promise<vo
     console.log('\n=== Workspace Creation Complete ===');
     console.log(`Workspace: ${outputDir}`);
     console.log(`Agent: ${agentName}`);
-    console.log(`Score: ${iterationResult.score}/${threshold}`);
-    console.log(`Iterations: ${iterationResult.iterations}`);
     const displayName = agentName.startsWith('@') ? agentName.slice(1) : agentName;
     console.log(`\nTo use this workflow, invoke: /${displayName} in your agent harness or CLI.`);
   } else {
